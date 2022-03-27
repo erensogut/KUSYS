@@ -1,0 +1,64 @@
+﻿@model List<KUSYS_Demo.Models.Student>
+@{
+    ViewData["Title"] = "Student List";
+}
+<div>
+    <div id="modalWrapper">
+    </div>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model[0].FirstName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model[0].LastName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model[0].BirthDate)
+                </th>
+
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.FirstName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.LastName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.BirthDate)
+                    </td>
+
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.StudentId">Edit</a> |
+                        <a href="#" onclick="editProduct(@item.StudentId)">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.StudentId">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script>
+ //   $(function() {
+  //  $('#editModal').modal();});
+
+    function editProduct(studentId) {
+        console.log('/Student/DetailPartial/' + studentId);
+    $.ajax({
+        url: '/Student/DetailPartial/' + studentId, // The method name + paramater
+        success: function(data) {
+            $('#modalWrapper').html(data); // This should be an empty div where you can inject your new html (the partial view)
+            $('#editModal').modal('toggle');
+        }
+    });
+}
+</script>

@@ -1,0 +1,68 @@
+﻿
+ @model KUSYS_Demo.Models.CourseSelectionModel
+
+
+<div class="text-center">
+
+    <body>
+        
+        <table>
+            <tr>
+                <td>Select Student:</td>
+                <td>
+                    @Html.DropDownListFor(x => x.StudentList, Model.StudentList)
+                </td>
+            </tr>
+            <tr>
+                <td>Add a Course:</td>
+                <td>
+                    @foreach (var item in Model.CourseList)
+                    {
+                    <div>
+                        <p>@item.CourseName</p>
+                        <a href="#" onclick="addItem(@item.CourseId,'@item.CourseName')">Add</a>
+                    </div>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td >Selected Courses;</td>
+                <td id="SelectedCoursesList">
+
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <a href="#" onclick="saveSelection()">Kaydet</a> |
+                </td>
+</tr>
+        </table>
+        
+    </body>
+
+    
+</div>
+
+<script>
+    var selectedListIds = [];
+    function addItem(courseId,courseName) {
+        if (selectedListIds.includes(courseId)) return;
+        selectedListIds.push(courseId);
+        $("#SelectedCoursesList").append(  courseName + ",");
+    };
+    function saveSelection() {
+        console.log(JSON.stringify(selectedListIds));
+        selectedListIds.unshift($('#StudentList').val());
+        $.ajax({
+            type: "post",
+            dataType: "json",
+            url: '/Course/SaveSelection',
+            data: JSON.stringify(selectedListIds), 
+            contentType: "application/json; charset=utf-8",
+            success: function (result) {
+                alert("Submitted");
+            }
+        });
+    };
+</script>
