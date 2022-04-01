@@ -2,25 +2,25 @@
 using Microsoft.AspNetCore.Mvc;
 using KUSYS_Demo.Models;
 using Microsoft.EntityFrameworkCore;
+using KUSYS_Demo.Interfaces;
 
 namespace KUSYS_Demo.Controllers;
 
 public class StudentController : Controller
 {
     private readonly ILogger<StudentController> _logger;
-    private readonly StudentSystemContext _context;
+    private readonly IStudentService _service;
 
 
-
-    public StudentController(ILogger<StudentController> logger, StudentSystemContext context)
+    public StudentController(ILogger<StudentController> logger, IStudentService service)
     {
         _logger = logger;
-        _context = context;
+        _service = service;
     }
 
     public IActionResult Get()
     {
-        var studentList = _context.Students.ToList();
+        var studentList = _service.GetStudents();
         return View(studentList);
     }
     public IActionResult Create()
@@ -30,62 +30,46 @@ public class StudentController : Controller
     [HttpPost]
     public IActionResult Create(Student model)
     {
-        _context.Students.Add(model);
-        _context.SaveChanges();
+        _service.CreateStudent(model);
         return RedirectToAction(nameof(Get));
     }
-    public async Task<IActionResult> Edit(int? id)
+    public IActionResult Edit(int? id)
     {
         if (id == null)
         {
             return NotFound();
         }
 
-        var movie = await _context.Students.FindAsync(id);
-        if (movie == null)
+        var student = _service.FindById(id);
+        if (student == null)
         {
             return NotFound();
         }
-        return View(movie);
+        return View(student);
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("StudentId,FirstName,LastName,BirthDate")] Student student)
+    public IActionResult Edit(int id, [Bind("StudentId,FirstName,LastName,BirthDate")] Student student)
     {
         if (id != student.StudentId)
         {
             return NotFound();
         }
 
+        _service.EditStudent(student);
         
-        try
-        {
-            _context.Update(student);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Students.Any(x=>x.StudentId == student.StudentId))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
+       
         return RedirectToAction(nameof(Get));
         
     }
-    public async Task<IActionResult> Delete(int? id)
+    public  IActionResult Delete(int? id)
     {
         if (id == null)
         {
             return NotFound();
         }
 
-        var student = await _context.Students
-            .FirstOrDefaultAsync(m => m.StudentId == id);
+        var student = _service.FindById(id);
         if (student == null)
         {
             return NotFound();
@@ -99,9 +83,7 @@ public class StudentController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var student = await _context.Students.FindAsync(id);
-        _context.Students.Remove(student);
-        await _context.SaveChangesAsync();
+        _service.DeleteStudent(id);
         return RedirectToAction(nameof(Get));
     }
     public IActionResult Privacy()
@@ -110,7 +92,7 @@ public class StudentController : Controller
     }
     public ActionResult DetailPartial(int? id)
     {
-        var model = _context.Students.FirstOrDefault(x=>x.StudentId==id);
+        var model = _service.FindById(id);
        
         return PartialView("_DetailPartial",model);
     }

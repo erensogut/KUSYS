@@ -17,6 +17,7 @@
     <None Remove="Views\Student\" />
     <None Remove="Views\Course\" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="Interfaces\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
@@ -32,5 +33,6 @@
     <Folder Include="Services\" />
     <Folder Include="Views\Student\" />
     <Folder Include="Views\Course\" />
+    <Folder Include="Interfaces\" />
   </ItemGroup>
 </Project>

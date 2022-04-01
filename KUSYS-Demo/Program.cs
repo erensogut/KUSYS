@@ -1,10 +1,13 @@
-﻿using KUSYS_Demo.Models;
+﻿using KUSYS_Demo.Interfaces;
+using KUSYS_Demo.Models;
+using KUSYS_Demo.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IStudentService, StudentService>();
 
 // connect to db
 builder.Services.AddDbContext<StudentSystemContext>(options =>
