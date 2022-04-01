@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace KUSYS_Demo.Controllers;
 
@@ -23,11 +24,31 @@ public class CourseController : Controller
     {
         return View();
     }
-
+    public IActionResult CourseList()
+    {
+        List<string> rowlist = new List<string>();
+        foreach(var item in _context.Students.Include("Enrolments").Include("Enrolments.Course"))
+        {
+            string line = item.FirstName + " " + item.LastName;
+            int i = 0;
+            foreach(var en in item.Enrolments)
+            {
+                if (i == 0)
+                {
+                    line = line + "=>" + en.Course.CourseName;
+                    i++;
+                }
+                else {
+                    line = line + "," + en.Course.CourseName;
+                }
+            }
+            rowlist.Add(line);
+            
+        }
+        return View(rowlist);
+    }
     public IActionResult Select()
     {
-        //Öğrenci isimleri ve ders listesi olan bir selection grubu olmalı
-        //Aşağısında selected courses isimli bir alan olmalı
         CourseSelectionModel courseSelectionModel = new CourseSelectionModel();
         courseSelectionModel.StudentList = _context.Students.Select(x=>new SelectListItem {Value=x.StudentId.ToString(),Text=x.FirstName+" "+x.LastName }).ToList();
         courseSelectionModel.CourseList = _context.Courses.ToList();
@@ -42,15 +63,29 @@ public class CourseController : Controller
     [HttpPost]
     public IActionResult SaveSelection([FromBody]List<int> ids)
     {
-        var student = _context.Students.Where(x => x.StudentId == ids.First()).First();
-        List<Enrolment> enrolments = new List<Enrolment>();
+        var student = _context.Students.Include("Enrolments").Where(x => x.StudentId == ids.First()).First();
         for(var i = 1; i < ids.Count; i++)
         {
-            enrolments.Add(new Enrolment { CourseId = ids[i], StudentId = student.StudentId });
+            if (_context.Enrolments.Any(x => x.StudentId == student.StudentId && x.CourseId == ids[i])) continue;
+            student.Enrolments.Add(new Enrolment { CourseId = ids[i], StudentId = student.StudentId });
         }
-        student.Enrolments = enrolments;
+
+        foreach(var item in student.Enrolments.Select(x => x.CourseId))
+        {
+            if (ids.Contains(item)) continue;
+            else
+            {
+                var enrol = _context.Enrolments.FirstOrDefault(x => x.CourseId == item && x.StudentId == student.StudentId);
+                _context.Enrolments.Remove(enrol);
+            }
+        }
         _context.SaveChanges();
-        return View();
+        return RedirectToAction(nameof(Select));
+    }
+    public JsonResult GetStudentList(int id)
+    {
+        var courseIdList = _context.Students.Where(x => x.StudentId == id).Select(x => x.Enrolments.Select(x => x.CourseId));
+        return Json(courseIdList);
     }
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

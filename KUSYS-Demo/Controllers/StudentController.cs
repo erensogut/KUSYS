@@ -32,7 +32,7 @@ public class StudentController : Controller
     {
         _context.Students.Add(model);
         _context.SaveChanges();
-        return View();
+        return RedirectToAction(nameof(Get));
     }
     public async Task<IActionResult> Edit(int? id)
     {
@@ -57,27 +57,25 @@ public class StudentController : Controller
             return NotFound();
         }
 
-        if (ModelState.IsValid)
+        
+        try
         {
-            try
-            {
-                _context.Update(student);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Students.Any(x=>x.StudentId == student.StudentId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Get));
+            _context.Update(student);
+            await _context.SaveChangesAsync();
         }
-        return View(student);
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Students.Any(x=>x.StudentId == student.StudentId))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+        return RedirectToAction(nameof(Get));
+        
     }
     public async Task<IActionResult> Delete(int? id)
     {

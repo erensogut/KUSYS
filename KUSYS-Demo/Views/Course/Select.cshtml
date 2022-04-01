@@ -1,16 +1,16 @@
 ﻿
- @model KUSYS_Demo.Models.CourseSelectionModel
+@model KUSYS_Demo.Models.CourseSelectionModel
 
 
 <div class="text-center">
 
     <body>
-        
+
         <table>
             <tr>
                 <td>Select Student:</td>
                 <td>
-                    @Html.DropDownListFor(x => x.StudentList, Model.StudentList)
+                    @Html.DropDownListFor(x => x.StudentList, Model.StudentList, new { @class = "form-control", @onchange = "getVal()" })
                 </td>
             </tr>
             <tr>
@@ -18,38 +18,67 @@
                 <td>
                     @foreach (var item in Model.CourseList)
                     {
-                    <div>
-                        <p>@item.CourseName</p>
-                        <a href="#" onclick="addItem(@item.CourseId,'@item.CourseName')">Add</a>
-                    </div>
+                        <div id="courseList">
+                            <button id="@item.CourseId" type="button" onclick="addItem(@item.CourseId,'@item.CourseName')" class="btn btn-outline-secondary">@item.CourseName</button>
+                        </div>
                     }
                 </td>
             </tr>
-            <tr>
-                <td >Selected Courses;</td>
-                <td id="SelectedCoursesList">
 
-                </td>
-            </tr>
             <tr>
                 <td></td>
                 <td>
-                    <a href="#" onclick="saveSelection()">Kaydet</a> |
+                    <button onclick="saveSelection()" class="btn btn-primary">Kaydet</button>
                 </td>
-</tr>
+            </tr>
         </table>
-        
+
     </body>
 
-    
+
 </div>
+
+@section scripts {
 
 <script>
     var selectedListIds = [];
-    function addItem(courseId,courseName) {
-        if (selectedListIds.includes(courseId)) return;
+    $(document).ready(function () {
+        console.log("Ready!");
+        getVal();
+
+    });
+    function getVal() {
+        var selectedVal = document.getElementById("StudentList").value;
+        console.log(selectedVal)
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            url: '/Course/GetStudentList/' + selectedVal,
+            success: function (result) {
+                console.log(result);
+                selectedListIds = result[0];
+                $("#courseList button").attr('class', 'btn btn-outline-secondary');
+                selectedListIds.forEach(
+                    function (item) {
+                        $("#" + item).attr('class', 'btn btn-secondary');
+                    })
+            }
+        });
+
+    };
+
+    function addItem(courseId, courseName) {
+        if (selectedListIds.includes(courseId)) {
+            selectedListIds = selectedListIds.filter(function (item) {
+                return item !== courseId
+            })
+            $("#" + courseId).attr('class', 'btn btn-outline-secondary');
+            return;
+        }
         selectedListIds.push(courseId);
-        $("#SelectedCoursesList").append(  courseName + ",");
+        $("#" + courseId).attr('class', 'btn btn-secondary');
+        console.log(selectedListIds);
+
     };
     function saveSelection() {
         console.log(JSON.stringify(selectedListIds));
@@ -58,11 +87,11 @@
             type: "post",
             dataType: "json",
             url: '/Course/SaveSelection',
-            data: JSON.stringify(selectedListIds), 
+            data: JSON.stringify(selectedListIds),
             contentType: "application/json; charset=utf-8",
             success: function (result) {
                 alert("Submitted");
             }
         });
     };
-</script>
+    </script>}
